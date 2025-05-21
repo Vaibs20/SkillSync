@@ -1,103 +1,63 @@
+//src/app/page.tsx
 import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <>
+      <section className="flex flex-row justify-between items-start px-20 py-16 min-h-screen">
+        {/* Left side - Hero content */}
+        <div className="hero-content w-1/2">
+          <h1>Connect, Collaborate, and Learn</h1>
+          <p className="hero-desc">
+            Skill Sync is a networking platform that helps students find study partners,
+            form groups, and participate in collaborative learning experiences.
+          </p>
+          <ul className="hero-list">
+            <li><i className="fas fa-check-circle"></i> Find students with similar interests</li>
+            <li><i className="fas fa-check-circle"></i> Join or create study groups</li>
+            <li><i className="fas fa-check-circle"></i> Stay updated with upcoming events & webinars</li>
+          </ul>
+          <a href="/auth/signup" className="cta-btn">Get Started</a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* Right side - Images and Features */}
+        <div className="w-1/2 flex flex-col gap-8">
+          {/* Images Section */}
+          <div className="flex flex-wrap justify-center gap-8">
+            <div className="image-container">
+              <img src="avatars.png" alt="Illustration 1" className="w-32 h-32 transition-transform duration-500 ease-out hover:scale-110" />
+              <p className="image-text">Find Study Partners</p>
+            </div>
+            <div className="image-container">
+              <img src="dev-productivity.png" alt="Illustration 2" className="w-32 h-32 transition-transform duration-500 ease-out hover:scale-110" />
+              <p className="image-text">Boost Productivity</p>
+            </div>
+            <div className="image-container">
+              <img src="pair-programming.png" alt="Illustration 3" className="w-32 h-32 transition-transform duration-500 ease-out hover:scale-110" />
+              <p className="image-text">Collaborate & Learn</p>
+            </div>
+          </div>
+
+          {/* Features Section */}
+          <div className="flex flex-wrap justify-center gap-8">
+            <div className="feature">
+              <i className="fas fa-users"></i>
+              <h3>Networking</h3>
+              <p>Connect with students preparing for the same exams or subjects.</p>
+            </div>
+            <div className="feature">
+              <i className="fas fa-comments"></i>
+              <h3>Study Groups</h3>
+              <p>Join discussions, share resources, and prepare together.</p>
+            </div>
+            <div className="feature">
+              <i className="fas fa-calendar-alt"></i>
+              <h3>Webinars & Events</h3>
+              <p>Stay informed about upcoming educational events.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
