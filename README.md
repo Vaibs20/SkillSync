@@ -196,4 +196,4 @@ Please follow the Code of Conduct and ensure code adheres to TypeScript and Tail
 For questions or feedback, open an issue on GitHub.
 
 **Live Demo**\
-[Click Here](https://skillsync-coral.vercel.app/search)
+[Click Here](https://skillsync-coral.vercel.app)
