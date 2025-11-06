@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { useAuthContext } from "@/context/AuthContext";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
@@ -19,20 +18,15 @@ export default function LoginPage() {
     const [buttonDisabled, setButtonDisabled] = useState(true);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { login } = useAuthContext();
 
     const handleLogin = async () => {
         try {
             setLoading(true);
-            const response = await axios.post("/api/users/login", user);
+            await axios.post("/api/users/login", user);
             
-            // Get user data from verify endpoint
-            const verifyResponse = await axios.get("/api/auth/verify");
-            if (verifyResponse.data.success) {
-                login(verifyResponse.data.user);
-                toast.success("Login successful");
-                router.push(verifyResponse.data.user.isOnboarded ? "/dashboard" : "/onboarding");
-            }
+            toast.success("Login successful");
+            // Redirect to dashboard - middleware will handle routing based on onboarding status
+            router.push("/dashboard");
         } catch (error: any) {
             console.log("Error during login:", error.message);
             toast.error(error.response?.data?.error || "Login failed");
