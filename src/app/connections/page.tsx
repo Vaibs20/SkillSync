@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 
@@ -24,6 +25,7 @@ interface Connection {
 }
 
 export default function Connections() {
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<"accepted" | "pending">("accepted");
     const [connections, setConnections] = useState<Connection[]>([]);
     const [loading, setLoading] = useState(false);
@@ -162,14 +164,25 @@ export default function Connections() {
                                         <p className="text-purple-200 text-sm text-center">Request sent</p>
                                     )}
                                     {activeTab === "accepted" && (
-                                        <Button 
-                                            variant="outline" 
-                                            size="sm" 
-                                            className="w-full border-white/30 text-white hover:bg-red-500/20"
-                                            onClick={() => handleRemove(connection._id)}
-                                        >
-                                            Remove Connection
-                                        </Button>
+                                        <div className="space-y-2">
+                                            <Link href={`/messages?userId=${connection.user._id}`}>
+                                                <Button 
+                                                    variant="primary" 
+                                                    size="sm" 
+                                                    className="w-full"
+                                                >
+                                                    Message
+                                                </Button>
+                                            </Link>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="w-full border-white/30 text-white hover:bg-red-500/20"
+                                                onClick={() => handleRemove(connection._id)}
+                                            >
+                                                Remove Connection
+                                            </Button>
+                                        </div>
                                     )}
                                 </div>
                             </Card>

@@ -2,12 +2,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import ProfileForm from "../profileform";
 import ProfileImage from "../profileimage";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
 const Profile = ({ params }: { params: { id: string } }) => {
+    const router = useRouter();
     const [isEditing] = useState(false);
     const [name, setName] = useState("");
     const [bio, setBio] = useState("");
@@ -169,10 +171,16 @@ const Profile = ({ params }: { params: { id: string } }) => {
                 }
             case "accepted":
                 return (
-                    <div className="mt-6">
-                        <div className="py-2 px-4 rounded-lg bg-green-100 text-green-800 font-semibold text-center mb-2">
+                    <div className="mt-6 space-y-2">
+                        <div className="py-2 px-4 rounded-lg bg-green-100 text-green-800 font-semibold text-center">
                             ✓ Connected
                         </div>
+                        <button
+                            className="w-full py-3 rounded-lg text-white font-semibold transition-all duration-300 bg-indigo-600 hover:bg-indigo-700"
+                            onClick={() => router.push(`/messages?userId=${params.id}`)}
+                        >
+                            Message
+                        </button>
                         <button
                             className="w-full py-3 rounded-lg text-white font-semibold transition-all duration-300 bg-red-600 hover:bg-red-700"
                             onClick={handleRemove}
