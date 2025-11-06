@@ -6,14 +6,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { useAuthContext } from "@/context/AuthContext";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 
 export default function SignupPage() {
     const router = useRouter();
-    const { login } = useAuthContext();
     const [user, setUser] = React.useState({
         name: "",
         email: "",
@@ -28,19 +26,8 @@ export default function SignupPage() {
             const signupResponse = await axios.post("/api/users/signup", user);
             console.log("Signup response:", signupResponse.data);
 
-            // Automatically log in
-            const loginResponse = await axios.post("/api/users/login", {
-                email: user.email,
-                password: user.password,
-            });
-            
-            // Get user data and update context
-            const verifyResponse = await axios.get("/api/auth/verify");
-            if (verifyResponse.data.success) {
-                login(verifyResponse.data.user);
-                toast.success("Account created successfully!");
-                router.push("/onboarding");
-            }
+            toast.success("Account created successfully! Please log in.");
+            router.push("/login");
         } catch (err: any) {
             console.error("Error:", err.response?.data || err);
             toast.error(err.response?.data?.error || "Signup failed");
