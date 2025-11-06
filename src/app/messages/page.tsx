@@ -9,6 +9,9 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
+// Configuration
+const MESSAGE_POLL_INTERVAL = 5000; // 5 seconds
+
 interface Message {
     _id: string;
     sender: {
@@ -62,10 +65,10 @@ export default function Messages() {
     useEffect(() => {
         if (selectedUserId) {
             fetchMessages(selectedUserId);
-            // Poll for new messages every 5 seconds
+            // Poll for new messages
             const interval = setInterval(() => {
                 fetchMessages(selectedUserId, true);
-            }, 5000);
+            }, MESSAGE_POLL_INTERVAL);
             return () => clearInterval(interval);
         }
     }, [selectedUserId]);
