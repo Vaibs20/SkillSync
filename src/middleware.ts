@@ -1,5 +1,13 @@
 //src/middleware.ts
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+interface AuthUser {
+    id: string;
+    email: string;
+    name: string;
+    isOnboarded: boolean;
+}
 
 export async function middleware(req: NextRequest) {
     const token = req.cookies.get("token")?.value;
@@ -17,21 +25,18 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    // If token exists, verify it via API
+    // If token exists, verify it directly
     if (token) {
         try {
-            const verifyResponse = await fetch(`${req.nextUrl.origin}/api/auth/verify`, {
-                method: "GET",
-                headers: { Cookie: `token=${token}` },
-            });
-            const verifyData = await verifyResponse.json();
-
-            // Redirect to /login if token is invalid or user not found
-            if (!verifyResponse.ok || !verifyData.success) {
+            const jwtSecret = process.env.JWT_SECRET_KEY;
+            if (!jwtSecret) {
+                console.error("JWT_SECRET_KEY not found in environment");
                 return NextResponse.redirect(new URL("/login", req.url));
             }
 
-            const { isOnboarded } = verifyData.user;
+            // Verify the JWT token directly in middleware
+            const decoded = jwt.verify(token, jwtSecret) as AuthUser;
+            const { isOnboarded } = decoded;
 
             // Redirect to /onboarding if not onboarded (except on /onboarding)
             if (!isOnboarded && pathname !== "/onboarding") {
