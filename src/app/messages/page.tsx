@@ -85,7 +85,7 @@ function MessagesContent() {
         try {
             const res = await axios.get("/api/auth/verify");
             setCurrentUserId(res.data.user.id);
-        } catch {
+        } catch (_error) {
             toast.error("Failed to fetch user info");
         }
     };

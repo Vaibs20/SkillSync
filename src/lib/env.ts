@@ -4,8 +4,6 @@
  * This ensures all required environment variables are set at startup
  */
 
-let isValidated = false;
-
 export function validateEnv() {
     const requiredEnvVars = [
         'JWT_SECRET_KEY',
@@ -20,22 +18,19 @@ export function validateEnv() {
             'Please check your .env file and ensure all required variables are set.'
         );
     }
-
-    isValidated = true;
 }
 
 /**
  * Get validated environment variables
- * These are guaranteed to be defined after validateEnv() is called
+ * Validation happens once when the module is loaded
  */
-function getEnv() {
-    if (!isValidated) {
-        validateEnv();
-    }
+function initEnv() {
+    validateEnv();
     return {
         JWT_SECRET_KEY: process.env.JWT_SECRET_KEY as string,
         MONGO_URI: process.env.MONGO_URI as string,
     };
 }
 
-export const env = getEnv();
+// Environment variables are validated once when this module is first imported
+export const env = initEnv();
