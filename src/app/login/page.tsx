@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -17,7 +16,6 @@ export default function LoginPage() {
     });
     const [buttonDisabled, setButtonDisabled] = useState(true);
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
 
     const handleLogin = async () => {
         try {
@@ -25,8 +23,9 @@ export default function LoginPage() {
             await axios.post("/api/users/login", user);
             
             toast.success("Login successful");
-            // Redirect to dashboard - middleware will handle routing based on onboarding status
-            router.push("/dashboard");
+            // Force full page reload to ensure cookie is sent with request
+            // Middleware will handle routing based on onboarding status
+            window.location.href = "/dashboard";
         } catch (error: any) {
             console.log("Error during login:", error.message);
             toast.error(error.response?.data?.error || "Login failed");
