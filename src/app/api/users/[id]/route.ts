@@ -45,7 +45,8 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
         const data = await req.json();
         
-        // Prevent updating sensitive fields
+        // Prevent updating sensitive fields - extract them to avoid them being in safeData
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, forgotPasswordToken, forgotPasswordTokenExpiry, 
                 verifyToken, verifyTokenExpiry, ...safeData } = data;
 

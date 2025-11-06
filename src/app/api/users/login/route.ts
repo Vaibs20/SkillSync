@@ -1,7 +1,7 @@
 // src / app / api / users / login / route.ts
 import { connect } from "@/dbConfig/dbConfig";
 import User from "@/models/User";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import bcryptjs from "bcryptjs";
 import { generateToken } from "@/lib/auth";
 import { successResponse, errorResponse, handleApiError } from "@/lib/apiResponse";
