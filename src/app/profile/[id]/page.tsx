@@ -8,7 +8,12 @@ import ProfileImage from "../profileimage";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
-const Profile = ({ params }: { params: { id: string } }) => {
+const Profile = async ({ params }: { params: Promise<{ id: string }> }) => {
+    const resolvedParams = await params;
+    return <ProfileClient userId={resolvedParams.id} />;
+};
+
+function ProfileClient({ userId }: { userId: string }) {
     const router = useRouter();
     const [isEditing] = useState(false);
     const [name, setName] = useState("");
@@ -32,17 +37,17 @@ const Profile = ({ params }: { params: { id: string } }) => {
         });
 
         // Fetch profile data
-        axios.get(`/api/users/${params.id}`).then((res) => {
+        axios.get(`/api/users/${userId}`).then((res) => {
             setName(res.data.name);
             setBio(res.data.learning_goal || "");
             setSkills(res.data.known_skills.join(", "));
         });
-    }, [params.id]);
+    }, [userId]);
 
     useEffect(() => {
-        if (currentUserId && currentUserId !== params.id) {
+        if (currentUserId && currentUserId !== userId) {
             // Check connection status
-            axios.get(`/api/connections/status?userId=${params.id}`)
+            axios.get(`/api/connections/status?userId=${userId}`)
                 .then((res) => {
                     setConnectionStatus(res.data.status);
                     if (res.data.connection) {
@@ -54,16 +59,17 @@ const Profile = ({ params }: { params: { id: string } }) => {
                     // Ignore errors
                 });
         }
-    }, [currentUserId, params.id]);
+    }, [currentUserId, userId]);
 
     const handleConnect = async () => {
         setLoading(true);
         try {
-            await axios.post("/api/connections", { receiverId: params.id });
+            await axios.post("/api/connections", { receiverId: userId });
             toast.success("Connection request sent!");
             setConnectionStatus("pending");
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || "Failed to send connection request");
+        } catch (error) {
+            const err = error as { response?: { data?: { error?: string } } };
+            toast.error(err.response?.data?.error || "Failed to send connection request");
         } finally {
             setLoading(false);
         }
@@ -76,8 +82,9 @@ const Profile = ({ params }: { params: { id: string } }) => {
             await axios.patch(`/api/connections/${connectionId}`, { action: "accept" });
             toast.success("Connection accepted!");
             setConnectionStatus("accepted");
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || "Failed to accept connection");
+        } catch (error) {
+            const err = error as { response?: { data?: { error?: string } } };
+            toast.error(err.response?.data?.error || "Failed to accept connection");
         } finally {
             setLoading(false);
         }
@@ -90,8 +97,9 @@ const Profile = ({ params }: { params: { id: string } }) => {
             await axios.patch(`/api/connections/${connectionId}`, { action: "reject" });
             toast.success("Connection rejected!");
             setConnectionStatus("rejected");
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || "Failed to reject connection");
+        } catch (error) {
+            const err = error as { response?: { data?: { error?: string } } };
+            toast.error(err.response?.data?.error || "Failed to reject connection");
         } finally {
             setLoading(false);
         }
@@ -105,8 +113,9 @@ const Profile = ({ params }: { params: { id: string } }) => {
             toast.success("Connection removed!");
             setConnectionStatus("none");
             setConnectionId(null);
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || "Failed to remove connection");
+        } catch (error) {
+            const err = error as { response?: { data?: { error?: string } } };
+            toast.error(err.response?.data?.error || "Failed to remove connection");
         } finally {
             setLoading(false);
         }
@@ -114,7 +123,7 @@ const Profile = ({ params }: { params: { id: string } }) => {
 
     const renderConnectionButton = () => {
         // Don't show button if viewing own profile
-        if (!currentUserId || currentUserId === params.id) {
+        if (!currentUserId || currentUserId === userId) {
             return null;
         }
 
@@ -177,7 +186,7 @@ const Profile = ({ params }: { params: { id: string } }) => {
                         </div>
                         <button
                             className="w-full py-3 rounded-lg text-white font-semibold transition-all duration-300 bg-indigo-600 hover:bg-indigo-700"
-                            onClick={() => router.push(`/messages?userId=${params.id}`)}
+                            onClick={() => router.push(`/messages?userId=${userId}`)}
                         >
                             Message
                         </button>
@@ -222,6 +231,6 @@ const Profile = ({ params }: { params: { id: string } }) => {
             </div>
         </div>
     );
-};
+}
 
 export default Profile;

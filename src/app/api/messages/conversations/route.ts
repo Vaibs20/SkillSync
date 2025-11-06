@@ -1,7 +1,6 @@
 // src/app/api/messages/conversations/route.ts
 import { connect } from "@/dbConfig/dbConfig";
 import Message from "@/models/Message";
-import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 

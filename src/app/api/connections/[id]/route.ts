@@ -7,8 +7,9 @@ import jwt from "jsonwebtoken";
 connect();
 
 // PATCH - Accept or reject a connection request
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
+        const params = await context.params;
         const token = req.cookies.get("token")?.value;
         if (!token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -51,8 +52,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 // DELETE - Remove a connection
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
+        const params = await context.params;
         const token = req.cookies.get("token")?.value;
         if (!token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

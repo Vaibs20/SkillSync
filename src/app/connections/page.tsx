@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 
@@ -25,7 +24,6 @@ interface Connection {
 }
 
 export default function Connections() {
-    const router = useRouter();
     const [activeTab, setActiveTab] = useState<"accepted" | "pending">("accepted");
     const [connections, setConnections] = useState<Connection[]>([]);
     const [loading, setLoading] = useState(false);
