@@ -2,20 +2,19 @@
 import { connect } from "@/dbConfig/dbConfig";
 import Message from "@/models/Message";
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { requireAuth } from "@/lib/auth";
+import { handleApiError } from "@/lib/apiResponse";
 
 connect();
 
 // GET - Get all conversations for the current user
 export async function GET(req: NextRequest) {
     try {
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { id: string };
-        const userId = decoded.id;
+        const userId = authResult.user.id;
 
         // Get all unique users the current user has messaged or received messages from
         const messages = await Message.find({
@@ -63,7 +62,6 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({ success: true, conversations });
     } catch (error: unknown) {
-        const err = error as Error;
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return handleApiError(error, "Failed to fetch conversations");
     }
 }

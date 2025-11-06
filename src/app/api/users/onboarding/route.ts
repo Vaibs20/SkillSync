@@ -1,20 +1,24 @@
 //src/app/api/users/onboarding/route.ts
 import { connect } from "@/dbConfig/dbConfig";
 import User from "@/models/User";
-import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { NextRequest } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { successResponse, errorResponse, handleApiError } from "@/lib/apiResponse";
 
 connect();
 
 export async function POST(req: NextRequest) {
     try {
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { id: string };
         const { onboardingDetails } = await req.json();
+
+        if (!onboardingDetails || !Array.isArray(onboardingDetails)) {
+            return errorResponse("Invalid onboarding details", 400);
+        }
 
         // Map formResponses to schema fields
         const updateData = {
@@ -35,14 +39,14 @@ export async function POST(req: NextRequest) {
             updatedAt: new Date(),
         };
 
-        const updatedUser = await User.findByIdAndUpdate(decoded.id, updateData, { new: true });
+        const updatedUser = await User.findByIdAndUpdate(authResult.user.id, updateData, { new: true });
 
         if (!updatedUser) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            return errorResponse("User not found", 404);
         }
 
-        return NextResponse.json({ message: "Profile updated", success: true });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return successResponse(undefined, "Profile updated");
+    } catch (error: unknown) {
+        return handleApiError(error, "Failed to update profile");
     }
 }

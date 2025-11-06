@@ -1,27 +1,26 @@
 // src/app/api/connections/status/route.ts
 import { connect } from "@/dbConfig/dbConfig";
 import Connection from "@/models/Connection";
-import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { NextRequest } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { successResponse, errorResponse, handleApiError } from "@/lib/apiResponse";
 
 connect();
 
 // GET - Check connection status with a specific user
 export async function GET(req: NextRequest) {
     try {
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { id: string };
-        const userId = decoded.id;
+        const userId = authResult.user.id;
 
         const { searchParams } = new URL(req.url);
         const otherUserId = searchParams.get("userId");
 
         if (!otherUserId) {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+            return errorResponse("User ID is required", 400);
         }
 
         // Find connection between the two users
@@ -33,15 +32,13 @@ export async function GET(req: NextRequest) {
         });
 
         if (!connection) {
-            return NextResponse.json({ 
-                success: true, 
+            return successResponse({ 
                 status: "none",
                 connection: null 
             });
         }
 
-        return NextResponse.json({ 
-            success: true, 
+        return successResponse({ 
             status: connection.status,
             connection: {
                 _id: connection._id,
@@ -50,7 +47,6 @@ export async function GET(req: NextRequest) {
             }
         });
     } catch (error: unknown) {
-        const err = error as Error;
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return handleApiError(error, "Failed to check connection status");
     }
 }

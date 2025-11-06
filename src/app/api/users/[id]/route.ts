@@ -1,44 +1,66 @@
 //src/app/api/users/[id]/route.ts
 import { connect } from "@/dbConfig/dbConfig";
 import User from "@/models/User";
-import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { NextRequest } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { successResponse, errorResponse, handleApiError } from "@/lib/apiResponse";
 
 connect();
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
-        const user = await User.findById(params.id);
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        const params = await context.params;
+        // Require authentication for viewing user profiles
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
-        return NextResponse.json(user);
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+
+        const user = await User.findById(params.id).select(
+            "-password -forgotPasswordToken -forgotPasswordTokenExpiry -verifyToken -verifyTokenExpiry"
+        );
+
+        if (!user) {
+            return errorResponse("User not found", 404);
+        }
+
+        return successResponse({ user });
+    } catch (error: unknown) {
+        return handleApiError(error, "Failed to fetch user");
     }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const params = await context.params;
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { id: string };
-        if (decoded.id !== params.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        // Users can only update their own profile
+        if (authResult.user.id !== params.id) {
+            return errorResponse("Unauthorized to update this profile", 403);
         }
 
         const data = await req.json();
-        const updatedUser = await User.findByIdAndUpdate(params.id, data, { new: true });
+        
+        // Prevent updating sensitive fields
+        const { password, forgotPasswordToken, forgotPasswordTokenExpiry, 
+                verifyToken, verifyTokenExpiry, ...safeData } = data;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            params.id, 
+            { ...safeData, updatedAt: new Date() }, 
+            { new: true }
+        ).select("-password -forgotPasswordToken -forgotPasswordTokenExpiry -verifyToken -verifyTokenExpiry");
 
         if (!updatedUser) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            return errorResponse("User not found", 404);
         }
 
-        return NextResponse.json({ message: "Profile updated", success: true });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return successResponse({ user: updatedUser }, "Profile updated");
+    } catch (error: unknown) {
+        return handleApiError(error, "Failed to update profile");
     }
 }
