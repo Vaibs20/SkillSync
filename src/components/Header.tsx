@@ -65,6 +65,7 @@ const Header = () => {
                         <>
                             <NavLink href="/dashboard">Dashboard</NavLink>
                             <NavLink href="/search">Search</NavLink>
+                            <NavLink href="/connections">Network</NavLink>
                             <NavLink href="/contacts">Contacts</NavLink>
                             <NavLink href="/study">Study</NavLink>
                             <Link href="/profile" className="hover:scale-105 transition-transform duration-200">
@@ -141,6 +142,7 @@ const Header = () => {
                                     </div>
                                     <NavLink href="/dashboard" onClick={() => setIsSidebarOpen(false)}>Dashboard</NavLink>
                                     <NavLink href="/search" onClick={() => setIsSidebarOpen(false)}>Search</NavLink>
+                                    <NavLink href="/connections" onClick={() => setIsSidebarOpen(false)}>Network</NavLink>
                                     <NavLink href="/contacts" onClick={() => setIsSidebarOpen(false)}>Contacts</NavLink>
                                     <NavLink href="/study" onClick={() => setIsSidebarOpen(false)}>Study</NavLink>
                                     <NavLink href="/profile" onClick={() => setIsSidebarOpen(false)}>Profile</NavLink>
