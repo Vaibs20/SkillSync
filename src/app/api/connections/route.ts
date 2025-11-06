@@ -3,20 +3,19 @@ import { connect } from "@/dbConfig/dbConfig";
 import Connection from "@/models/Connection";
 import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { requireAuth } from "@/lib/auth";
+import { errorResponse, handleApiError } from "@/lib/apiResponse";
 
 connect();
 
 // GET - Get all connections for the logged-in user
 export async function GET(req: NextRequest) {
     try {
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { id: string };
-        const userId = decoded.id;
+        const userId = authResult.user.id;
 
         const { searchParams } = new URL(req.url);
         const status = searchParams.get("status") || "accepted";
@@ -43,36 +42,33 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({ success: true, connections: formattedConnections });
     } catch (error: unknown) {
-        const err = error as Error;
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return handleApiError(error, "Failed to fetch connections");
     }
 }
 
 // POST - Send a connection request
 export async function POST(req: NextRequest) {
     try {
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { id: string };
-        const senderId = decoded.id;
+        const senderId = authResult.user.id;
 
         const { receiverId } = await req.json();
 
         if (!receiverId) {
-            return NextResponse.json({ error: "Receiver ID is required" }, { status: 400 });
+            return errorResponse("Receiver ID is required", 400);
         }
 
         if (senderId === receiverId) {
-            return NextResponse.json({ error: "Cannot send connection request to yourself" }, { status: 400 });
+            return errorResponse("Cannot send connection request to yourself", 400);
         }
 
         // Check if receiver exists
         const receiver = await User.findById(receiverId);
         if (!receiver) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            return errorResponse("User not found", 404);
         }
 
         // Check if connection already exists
@@ -84,10 +80,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (existingConnection) {
-            return NextResponse.json({ 
-                error: "Connection request already exists", 
-                connection: existingConnection 
-            }, { status: 400 });
+            return errorResponse("Connection request already exists", 400);
         }
 
         // Create new connection request
@@ -99,13 +92,15 @@ export async function POST(req: NextRequest) {
 
         await connection.save();
 
-        return NextResponse.json({ 
-            success: true, 
-            message: "Connection request sent successfully",
-            connection 
-        });
+        return NextResponse.json(
+            { 
+                success: true, 
+                message: "Connection request sent successfully",
+                connection 
+            },
+            { status: 201 }
+        );
     } catch (error: unknown) {
-        const err = error as Error;
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return handleApiError(error, "Failed to send connection request");
     }
 }

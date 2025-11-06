@@ -1,11 +1,20 @@
 import { connect } from "@/dbConfig/dbConfig";
 import User from "@/models/User";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { successResponse, handleApiError } from "@/lib/apiResponse";
+import type { UserSearchFilter } from "@/lib/types";
 
 connect();
 
 export async function GET(req: NextRequest) {
     try {
+        // Require authentication for user search
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
+        }
+
         const { searchParams } = new URL(req.url);
         const name = searchParams.get("name") || "";
         const email = searchParams.get("email") || "";
@@ -20,7 +29,7 @@ export async function GET(req: NextRequest) {
         const isVerified = searchParams.get("isVerified") || "";
 
         // Build MongoDB query
-        const query: any = {};
+        const query: UserSearchFilter = {};
         if (name) query.name = { $regex: name, $options: "i" };
         if (email) query.email = { $regex: email, $options: "i" };
         if (branch) query.branch = branch;
@@ -38,8 +47,8 @@ export async function GET(req: NextRequest) {
             "-password -forgotPasswordToken -forgotPasswordTokenExpiry -verifyToken -verifyTokenExpiry"
         );
 
-        return NextResponse.json({ success: true, users });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return successResponse({ users });
+    } catch (error: unknown) {
+        return handleApiError(error, "Failed to search users");
     }
 }

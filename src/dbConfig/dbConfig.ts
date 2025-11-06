@@ -1,9 +1,13 @@
 // src / dbConfig / dbConfig.ts
 import mongoose from "mongoose";
+import { validateEnv, env } from "@/lib/env";
+
+// Validate environment variables on module load
+validateEnv();
 
 export async function connect() {
     try {
-        await mongoose.connect(process.env.MONGO_URI!);
+        await mongoose.connect(env.MONGO_URI);
         console.log('MongoDB connected...');
         const connection = mongoose.connection;
         connection.on('connected', () => {

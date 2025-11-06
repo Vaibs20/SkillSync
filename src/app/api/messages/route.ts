@@ -3,26 +3,25 @@ import { connect } from "@/dbConfig/dbConfig";
 import Message from "@/models/Message";
 import Connection from "@/models/Connection";
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { requireAuth } from "@/lib/auth";
+import { errorResponse, handleApiError } from "@/lib/apiResponse";
 
 connect();
 
 // GET - Get messages between current user and another user
 export async function GET(req: NextRequest) {
     try {
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { id: string };
-        const userId = decoded.id;
+        const userId = authResult.user.id;
 
         const { searchParams } = new URL(req.url);
         const otherUserId = searchParams.get("userId");
 
         if (!otherUserId) {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+            return errorResponse("User ID is required", 400);
         }
 
         // Check if users are connected
@@ -34,9 +33,10 @@ export async function GET(req: NextRequest) {
         });
 
         if (!connection) {
-            return NextResponse.json({ 
-                error: "You can only message users you are connected with" 
-            }, { status: 403 });
+            return errorResponse(
+                "You can only message users you are connected with",
+                403
+            );
         }
 
         // Fetch messages between the two users
@@ -58,34 +58,33 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({ success: true, messages });
     } catch (error: unknown) {
-        const err = error as Error;
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return handleApiError(error, "Failed to fetch messages");
     }
 }
 
 // POST - Send a message
 export async function POST(req: NextRequest) {
     try {
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { id: string };
-        const senderId = decoded.id;
+        const senderId = authResult.user.id;
 
         const { receiverId, content } = await req.json();
 
         if (!receiverId || !content) {
-            return NextResponse.json({ 
-                error: "Receiver ID and message content are required" 
-            }, { status: 400 });
+            return errorResponse(
+                "Receiver ID and message content are required",
+                400
+            );
         }
 
         if (!content.trim()) {
-            return NextResponse.json({ 
-                error: "Message content cannot be empty" 
-            }, { status: 400 });
+            return errorResponse(
+                "Message content cannot be empty",
+                400
+            );
         }
 
         // Check if users are connected
@@ -97,9 +96,10 @@ export async function POST(req: NextRequest) {
         });
 
         if (!connection) {
-            return NextResponse.json({ 
-                error: "You can only message users you are connected with" 
-            }, { status: 403 });
+            return errorResponse(
+                "You can only message users you are connected with",
+                403
+            );
         }
 
         // Create new message
@@ -113,13 +113,15 @@ export async function POST(req: NextRequest) {
         await message.populate("sender", "name email");
         await message.populate("receiver", "name email");
 
-        return NextResponse.json({ 
-            success: true, 
-            message: "Message sent successfully",
-            data: message
-        });
+        return NextResponse.json(
+            { 
+                success: true, 
+                message: "Message sent successfully",
+                data: message
+            },
+            { status: 201 }
+        );
     } catch (error: unknown) {
-        const err = error as Error;
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return handleApiError(error, "Failed to send message");
     }
 }

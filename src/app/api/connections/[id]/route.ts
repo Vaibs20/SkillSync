@@ -1,8 +1,9 @@
 // src/app/api/connections/[id]/route.ts
 import { connect } from "@/dbConfig/dbConfig";
 import Connection from "@/models/Connection";
-import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { NextRequest } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { successResponse, errorResponse, handleApiError } from "@/lib/apiResponse";
 
 connect();
 
@@ -10,29 +11,27 @@ connect();
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
         const params = await context.params;
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { id: string };
-        const userId = decoded.id;
+        const userId = authResult.user.id;
 
         const { action } = await req.json(); // action: "accept" or "reject"
 
         if (!action || !["accept", "reject"].includes(action)) {
-            return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+            return errorResponse("Invalid action", 400);
         }
 
         const connection = await Connection.findById(params.id);
 
         if (!connection) {
-            return NextResponse.json({ error: "Connection not found" }, { status: 404 });
+            return errorResponse("Connection not found", 404);
         }
 
         // Only the receiver can accept/reject
         if (connection.receiver.toString() !== userId) {
-            return NextResponse.json({ error: "Unauthorized to modify this connection" }, { status: 403 });
+            return errorResponse("Unauthorized to modify this connection", 403);
         }
 
         // Update status
@@ -40,14 +39,12 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
         connection.updatedAt = new Date();
         await connection.save();
 
-        return NextResponse.json({ 
-            success: true, 
-            message: `Connection ${action}ed successfully`,
-            connection 
-        });
+        return successResponse(
+            { connection },
+            `Connection ${action}ed successfully`
+        );
     } catch (error: unknown) {
-        const err = error as Error;
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return handleApiError(error, "Failed to update connection");
     }
 }
 
@@ -55,33 +52,30 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
         const params = await context.params;
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const authResult = await requireAuth(req);
+        if ('error' in authResult) {
+            return authResult.error;
         }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { id: string };
-        const userId = decoded.id;
+        const userId = authResult.user.id;
 
         const connection = await Connection.findById(params.id);
 
         if (!connection) {
-            return NextResponse.json({ error: "Connection not found" }, { status: 404 });
+            return errorResponse("Connection not found", 404);
         }
 
         // Either party can delete the connection
         if (connection.sender.toString() !== userId && connection.receiver.toString() !== userId) {
-            return NextResponse.json({ error: "Unauthorized to delete this connection" }, { status: 403 });
+            return errorResponse("Unauthorized to delete this connection", 403);
         }
 
         await Connection.findByIdAndDelete(params.id);
 
-        return NextResponse.json({ 
-            success: true, 
-            message: "Connection removed successfully"
-        });
+        return successResponse(
+            undefined,
+            "Connection removed successfully"
+        );
     } catch (error: unknown) {
-        const err = error as Error;
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return handleApiError(error, "Failed to delete connection");
     }
 }

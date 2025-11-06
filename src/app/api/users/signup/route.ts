@@ -1,19 +1,23 @@
 // src / app / api / users / signup / route.ts
 import { connect } from "@/dbConfig/dbConfig";
 import User from "@/models/User";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import bcryptjs from "bcryptjs";
+import { successResponse, errorResponse, handleApiError } from "@/lib/apiResponse";
 
 connect();
 
 export async function POST(req: NextRequest) {
     try {
         const { name, email, password } = await req.json();
-        console.log("Received data:", { name, email, password });
+
+        if (!name || !email || !password) {
+            return errorResponse("Name, email and password are required", 400);
+        }
 
         const user = await User.findOne({ email });
         if (user) {
-            return NextResponse.json({ error: "User already exists" }, { status: 400 });
+            return errorResponse("User already exists", 400);
         }
 
         const salt = await bcryptjs.genSalt(10);
@@ -41,13 +45,13 @@ export async function POST(req: NextRequest) {
         });
 
         const savedUser = await newUser.save();
-        console.log(savedUser);
 
-        return NextResponse.json(
-            { message: "User created successfully", success: true, user: { id: savedUser._id, email, name } },
-            { status: 201 }
+        return successResponse(
+            { user: { id: savedUser._id, email, name } },
+            "User created successfully",
+            201
         );
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, "Failed to create user");
     }
 }

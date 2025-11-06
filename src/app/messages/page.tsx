@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -40,7 +40,7 @@ interface Conversation {
     unread: boolean;
 }
 
-export default function Messages() {
+function MessagesContent() {
     const searchParams = useSearchParams();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -85,7 +85,7 @@ export default function Messages() {
         try {
             const res = await axios.get("/api/auth/verify");
             setCurrentUserId(res.data.user.id);
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to fetch user info");
         }
     };
@@ -285,5 +285,24 @@ export default function Messages() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function Messages() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen p-6">
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-8">
+                        <h1 className="text-4xl font-bold text-white mb-2">Messages</h1>
+                        <p className="text-purple-200 text-lg">
+                            Loading...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        }>
+            <MessagesContent />
+        </Suspense>
     );
 }

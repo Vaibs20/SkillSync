@@ -2,29 +2,25 @@
 import { connect } from "@/dbConfig/dbConfig";
 import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { requireAuth } from "@/lib/auth";
+import { errorResponse, handleApiError } from "@/lib/apiResponse";
 
 connect();
 
 export async function GET(req: NextRequest) {
     try {
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const authResult = await requireAuth(req);
+        
+        if ('error' in authResult) {
+            return authResult.error;
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as {
-            id: string;
-            isOnboarded: boolean;
-            name: string;
-            email: string;
-        };
-
-        const user = await User.findById(decoded.id);
+        const user = await User.findById(authResult.user.id);
         if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            return errorResponse("User not found", 404);
         }
 
+        // Return user data at top level for backwards compatibility
         return NextResponse.json({
             success: true,
             user: {
@@ -34,7 +30,7 @@ export async function GET(req: NextRequest) {
                 isOnboarded: user.isOnboarded,
             },
         });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, "Verification failed");
     }
 }
