@@ -45,10 +45,15 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
         const data = await req.json();
         
-        // Prevent updating sensitive fields - extract them to avoid them being in safeData
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { password, forgotPasswordToken, forgotPasswordTokenExpiry, 
-                verifyToken, verifyTokenExpiry, ...safeData } = data;
+        // Prevent updating sensitive fields by excluding them from the update
+        const {
+            password: _password,
+            forgotPasswordToken: _forgotPasswordToken,
+            forgotPasswordTokenExpiry: _forgotPasswordTokenExpiry,
+            verifyToken: _verifyToken,
+            verifyTokenExpiry: _verifyTokenExpiry,
+            ...safeData
+        } = data;
 
         const updatedUser = await User.findByIdAndUpdate(
             params.id, 

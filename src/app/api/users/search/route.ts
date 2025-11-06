@@ -3,6 +3,7 @@ import User from "@/models/User";
 import { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { successResponse, handleApiError } from "@/lib/apiResponse";
+import type { UserSearchFilter } from "@/lib/types";
 
 connect();
 
@@ -28,21 +29,7 @@ export async function GET(req: NextRequest) {
         const isVerified = searchParams.get("isVerified") || "";
 
         // Build MongoDB query
-        interface QueryFilter {
-            name?: { $regex: string; $options: string };
-            email?: { $regex: string; $options: string };
-            branch?: string;
-            passing_year?: number;
-            known_skills?: { $in: string[] };
-            career_path?: { $in: string[] };
-            experience?: boolean;
-            learning_goal?: { $regex: string; $options: string };
-            availability?: string;
-            isOnboarded?: boolean;
-            isVerified?: boolean;
-        }
-
-        const query: QueryFilter = {};
+        const query: UserSearchFilter = {};
         if (name) query.name = { $regex: name, $options: "i" };
         if (email) query.email = { $regex: email, $options: "i" };
         if (branch) query.branch = branch;
